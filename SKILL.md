@@ -53,10 +53,10 @@ All on-screen texts are Russian by default and sit at the top of each `effects/*
 
 ## How to run it (you, the assistant)
 
-1. Find the clip. If it is 4K, HEVC or >100 MB, make a proxy first:
+1. Find the clip. If it is 4K, HEVC or over 100 MB, make a proxy first:
    `ffmpeg -i in.mov -vf "scale=1080:1920,fps=30" -c:v libx264 -crf 16 -an clip.mp4`
 2. Ask once for the name / @handle to show (or read `config.json`) and the words for the cards, if the effect has any.
-3. **Preview first:** `python3 run.py <effect> clip.mp4 --preview 1.0,2.0,4.0` → show the PNGs, adjust texts on request.
-4. Render: `python3 run.py <effect> clip.mp4 -o out.mp4` (keeps the voice; `--no-voice --music` for music only;
+3. **Preview first:** `python3 run.py EFFECT clip.mp4 --preview 1.0,2.0,4.0` → show the PNGs, adjust texts on request.
+4. Render: `python3 run.py EFFECT clip.mp4 -o out.mp4` (keeps the voice; `--no-voice --music` for music only;
    `--start 3` starts the effect at 3 s).
 5. Before handing over: look at a few frames and run `ffmpeg -i out.mp4 -vf blackdetect -f null -`.

@@ -1,15 +1,35 @@
 """Effect registry: /effects <name> → module. ORDER = all 28 effects."""
 import importlib
 
-ORDER = [
-    # set 1
-    "glass-widgets", "documentary", "orbit", "chart-split", "spotlight", "checklist", "timeline",
-    # set 2
-    "text-behind", "over-the-shoulder", "tier-list", "freeze-frame", "glass-graph", "color-grade",
-    # set 3
-    "exploded-layers", "ui-world", "frame-break", "digital-zoom", "phone-mockup", "cinematic-mode", "ai-glow",
-    "lift-subject", "type-ring", "dynamic-island", "spatial-window", "liquid-glass", "headline-wall", "photo-wall",
+ORDER = [  # newest and most trending first
     "lock-screen",
+    "exploded-layers",
+    "type-ring",
+    "dynamic-island",
+    "liquid-glass",
+    "cinematic-mode",
+    "ai-glow",
+    "frame-break",
+    "headline-wall",
+    "lift-subject",
+    "spatial-window",
+    "phone-mockup",
+    "digital-zoom",
+    "ui-world",
+    "photo-wall",
+    "text-behind",
+    "freeze-frame",
+    "orbit",
+    "glass-widgets",
+    "over-the-shoulder",
+    "tier-list",
+    "glass-graph",
+    "spotlight",
+    "documentary",
+    "checklist",
+    "color-grade",
+    "chart-split",
+    "timeline",
 ]
 FILES = {"over-the-shoulder": "over_shoulder"}
 

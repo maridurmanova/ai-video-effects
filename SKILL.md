@@ -19,34 +19,34 @@ The first run downloads a person-segmentation model (~170 MB, once, from github.
 
 | # | name | what it does |
 |---|---|---|
-| 01 | `glass-widgets` | glass widgets (counters, render bar, profile) float around the speaker |
-| 02 | `documentary` | b/w documentary card: big title, name plate, «subscribe» click |
-| 03 | `orbit` | mini reels orbit around the speaker, passing behind and in front |
-| 04 | `chart-split` | split screen: bar chart on top, speaker below |
-| 05 | `spotlight` | dark stage, neon word behind the head, spotlight on the speaker |
-| 06 | `checklist` | glass card ticks off every editing step |
-| 07 | `timeline` | editor timeline with tracks and a render progress bar |
-| 08 | `text-behind` | a huge word rises behind the speaker's head |
-| 09 | `over-the-shoulder` | push-in, two proof cards (before / after, counting up) beside the head |
-| 10 | `tier-list` | glass S/A/B/C/D ranking fills itself |
-| 11 | `freeze-frame` | flash, freeze, dimmed background, white sticker outline, name tag |
-| 12 | `glass-graph` | glass card on the chest, % counts up, graph climbs |
-| 13 | `color-grade` | flat → cinematic grade with a before/after wipe |
-| 14 | `exploded-layers` | the frame tilts in 3D and splits into layers: background, you, graphics |
-| 15 | `ui-world` | the clip lives in an app window with a file chip, then zooms in |
-| 16 | `frame-break` | the head breaks out over the top edge of the frame |
-| 17 | `digital-zoom` | punch-in zooms with a camera viewfinder, REC and zoom readout |
-| 18 | `phone-mockup` | the clip plays inside a phone on a lilac background |
-| 19 | `cinematic-mode` | background melts into bokeh, focus box on the face, aperture dial |
-| 20 | `ai-glow` | pink-violet-orange glow runs around the edges while the AI «thinks» |
-| 21 | `lift-subject` | the speaker lifts off the background with a white halo |
-| 22 | `type-ring` | a ring of text spins around the head, passing behind it |
-| 23 | `dynamic-island` | the phone's island expands: «Монтирую…» → «Монтаж готов ✓» |
-| 24 | `spatial-window` | the clip floats in a glass window over a blurred room |
-| 25 | `liquid-glass` | a glass lens glides over the frame and refracts it, glass dock below |
-| 26 | `headline-wall` | magazine headline words stack up behind the speaker |
-| 27 | `photo-wall` | framed shots from the same clip pin themselves to the wall behind |
-| 28 | `lock-screen` | phone lock screen: big clock behind the head, «Ролик смонтирован ✓» notification |
+| 01 | `lock-screen` | phone lock screen: big clock behind the head, «Ролик смонтирован ✓» notification |
+| 02 | `exploded-layers` | the frame tilts in 3D and splits into layers: background, you, graphics |
+| 03 | `type-ring` | a ring of text spins around the head, passing behind it |
+| 04 | `dynamic-island` | the phone's island expands: «Монтирую…» → «Монтаж готов ✓» |
+| 05 | `liquid-glass` | a glass lens glides over the frame and refracts it, glass dock below |
+| 06 | `cinematic-mode` | background melts into bokeh, focus box on the face, aperture dial |
+| 07 | `ai-glow` | pink-violet-orange glow runs around the edges while the AI «thinks» |
+| 08 | `frame-break` | the head breaks out over the top edge of the frame |
+| 09 | `headline-wall` | magazine headline words stack up behind the speaker |
+| 10 | `lift-subject` | the speaker lifts off the background with a white halo |
+| 11 | `spatial-window` | the clip floats in a glass window over a blurred room |
+| 12 | `phone-mockup` | the clip plays inside a phone on a lilac background |
+| 13 | `digital-zoom` | punch-in zooms with a camera viewfinder, REC and zoom readout |
+| 14 | `ui-world` | the clip lives in an app window with a file chip, then zooms in |
+| 15 | `photo-wall` | framed shots from the same clip pin themselves to the wall behind |
+| 16 | `text-behind` | a huge word rises behind the speaker's head |
+| 17 | `freeze-frame` | flash, freeze, dimmed background, white sticker outline, name tag |
+| 18 | `orbit` | mini reels orbit around the speaker, passing behind and in front |
+| 19 | `glass-widgets` | glass widgets (counters, render bar, profile) float around the speaker |
+| 20 | `over-the-shoulder` | push-in, two proof cards (before / after, counting up) beside the head |
+| 21 | `tier-list` | glass S/A/B/C/D ranking fills itself |
+| 22 | `glass-graph` | glass card on the chest, % counts up, graph climbs |
+| 23 | `spotlight` | dark stage, neon word behind the head, spotlight on the speaker |
+| 24 | `documentary` | b/w documentary card: big title, name plate, «subscribe» click |
+| 25 | `checklist` | glass card ticks off every editing step |
+| 26 | `color-grade` | flat → cinematic grade with a before/after wipe |
+| 27 | `chart-split` | split screen: bar chart on top, speaker below |
+| 28 | `timeline` | editor timeline with tracks and a render progress bar |
 
 All on-screen texts are Russian by default and sit at the top of each `effects/*.py` file
 (constants like `WORD`, `WORDS`, `TEXT`, `BEFORE`, `AFTER`, `HEADER`, `LABEL`). Name and @handle are in `config.json`.

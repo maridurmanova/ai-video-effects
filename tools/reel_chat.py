@@ -1,34 +1,36 @@
 #!/usr/bin/env python3
-"""Showcase reel: hook → six /effects2 commands typed in a chat → code-word poster.
+"""Showcase reel «чат»: /effects commands typed in a light chat → dot-matrix reveal → fullscreen → code-word poster.
 
-    python3 reel.py my_clip.mp4 -o reel.mp4 --music track.mp3 --word вирусно
+    python3 tools/reel_chat.py clip.mp4 -o reel.mp4 --music track.wav --stills frames_list --word эффекты
 
 Cuts land on the music's beat (--bpm, --offset). The clip's own sound is dropped;
 the result has the music plus keyboard / send / sparkle / whoosh / pop sounds.
 """
 import argparse, os, sys, subprocess
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from PIL import Image, ImageDraw
 from lib.core import *
 from lib.ctx import Ctx
-from lib import ui, audio
-from effects2 import ORDER, load
+from lib import ui_light as ui, audio
+from lib.kit import *
+from effects import ORDER, load
+PICK = ["exploded-layers", "lock-screen", "cinematic-mode", "type-ring", "dynamic-island", "liquid-glass", "headline-wall"]
 
-SRC_SHIFT = {"freeze-frame": 1.7, "glass-graph": 3.6, "color-grade": 1.5}   # take these from a better moment of the clip
-DELAY = {"text-behind": 0.75, "over-the-shoulder": 0.3, "tier-list": 0.4,
-         "freeze-frame": 0.82, "glass-graph": 0.45, "color-grade": 0.6}
+SRC_SHIFT = {}   # take these from a better moment of the clip
+DELAY = {"exploded-layers": 0.5, "lock-screen": 0.45, "cinematic-mode": 0.55, "type-ring": 0.55,
+         "dynamic-island": 0.45, "liquid-glass": 0.55, "headline-wall": 0.6}
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("video"); ap.add_argument("-o", "--out", default="reel.mp4")
     ap.add_argument("--music"); ap.add_argument("--music-start", type=float, default=0.0)
-    ap.add_argument("--bpm", type=float, default=107.67); ap.add_argument("--offset", type=float, default=0.035)
-    ap.add_argument("--word", default="вирусно")
+    ap.add_argument("--bpm", type=float, default=152.0); ap.add_argument("--offset", type=float, default=0.325)
+    ap.add_argument("--word", default="эффекты"); ap.add_argument("--stills", default="frames_list")
     ap.add_argument("--hook", default="", help='opening title "LINE 1|LINE 2"; empty = start straight with the effects')
     ap.add_argument("--sub", default="6 эффектов — одной командой")
-    ap.add_argument("--sfx-gain", type=float, default=0.5)
-    ap.add_argument("--effects", default=",".join(ORDER))
+    ap.add_argument("--sfx-gain", type=float, default=0.35)
+    ap.add_argument("--effects", default=",".join(PICK))
     ap.add_argument("--preview", type=float)
     a = ap.parse_args()
 
@@ -37,7 +39,7 @@ def main():
     n = len(mods)
     beat = 60 / a.bpm
     T0 = a.offset + (3 * beat if a.hook else 0)   # optional hook = 3 beats
-    SEG = 6 * beat                           # each effect = 6 beats
+    SEG = 8 * beat                           # each effect = 8 beats
     TEND = T0 + n * SEG
     total = max(TEND + 4 * beat, TEND + 2.0)
     if a.music:
@@ -53,7 +55,7 @@ def main():
     TY0, TY1, SEND, CHAT, D0, D1, Z0, Z1, EFF = .10, .62, .70, .75, .85, 1.35, 1.40, 1.72, .90
 
     def cmd_of(m):
-        return "/effects2 " + m.NAME
+        return "/effects " + m.NAME
 
     def popup(s):
         if not s.startswith("/"):
@@ -62,13 +64,13 @@ def main():
         hits = [m for m in mods if part and m.NAME.startswith(part)]
         if hits:
             return [(hits[0].NAME, hits[0].DESC)]
-        return [("/effects2", f"{n} видеоэффектов для твоего клипа")]
+        return [("/effects", f"{len(ORDER)} видеоэффектов для твоего клипа")]
 
-    print("stills…", flush=True)
     stills = []
-    for i, m in enumerate(mods):
-        k_full = T0 + i * SEG + Z1 + 0.9
-        stills.append((m.NAME, m.render(ctx, 1.6, src_t(k_full + SRC_SHIFT.get(m.NAME, 0)))))
+    for k, nm in enumerate(ORDER):
+        dd = os.path.join(a.stills, f"{k:02d}")
+        fs = sorted(os.listdir(dd))
+        stills.append((nm, Image.open(os.path.join(dd, fs[len(fs) // 2])).convert("RGB")))
     thumb = ctx.clip.frame(2.0)
 
     def hook(t):
@@ -94,32 +96,42 @@ def main():
             out.alpha_composite(o2)
         return out.convert("RGB")
 
+    BGP = light_bg()
+
     def poster(t):
-        img = Image.new("RGB", (W, H), (26, 26, 25))
+        img = BGP.copy()
         d = ImageDraw.Draw(img)
         q = ease_back(prog(t, 0.0, 0.35))
-        title = f"Напиши «{a.word}»"
-        f = font("oswald", 130, 700)
-        f = font("oswald", int(130 * min(1, 980 / tw(title, f))), 700)
-        d.text((W // 2, 250 - 30 * (1 - q)), title, font=f, fill=(255, 255, 255), anchor="mm")
-        fp = font("sans", 40, 700)
-        s = f"и получи все {n} эффектов"
-        pw = tw(s, fp) + 70
-        d.rounded_rectangle((W / 2 - pw / 2, 350, W / 2 + pw / 2, 432), 41, fill=CLAY)
-        d.text((W // 2, 391), s, font=fp, fill=(255, 255, 255), anchor="mm")
-        cols, gap, x0 = 3, 24, 60
-        tw_ = (W - 2 * x0 - (cols - 1) * gap) // cols
-        th_ = int(tw_ * 16 / 9)
-        for i, (lab, im) in enumerate(stills):
+        word = a.word.upper()
+        f = font("inter", 96, 800)
+        pre = "Напиши "
+        wq = f"«{word}»"
+        x = W / 2 - (d.textlength(pre, font=f) + d.textlength(wq, font=f)) / 2
+        y = 190 - 30 * (1 - min(1, q))
+        d.text((x, y), pre, font=f, fill=INK, anchor="ls")
+        d.text((x + d.textlength(pre, font=f), y), wq, font=f, fill=PINK, anchor="ls")
+        pl = pill(f"все {len(ORDER)} эффектов одной командой", 34, bg=PINK_FILL, weight=700)
+        put(img, pl, (W / 2, 260), min(1, q))
+        cols, gap, x0, y0 = 6, 14, 40, 330
+        tw_ = (W - 2 * x0 - (cols - 1) * gap) / cols
+        th_ = tw_ * 16 / 9
+        tiles = stills + [("+", None)]
+        for i, (lab, im) in enumerate(tiles):
             r, c = divmod(i, cols)
-            x, y = x0 + c * (tw_ + gap), 500 + r * (th_ + 66)
-            p = ease_back(prog(t, 0.12 + i * 0.07, 0.3), 2)
+            cx, cy = x0 + c * (tw_ + gap) + tw_ / 2, y0 + r * (th_ + gap) + th_ / 2
+            p = ease_back(prog(t, 0.1 + i * 0.03, 0.3), 2)
             if p <= 0:
                 continue
-            paste_scaled(img, im.resize((tw_, th_), Image.LANCZOS), (x + tw_ / 2, y + th_ / 2), p, radius=18)
-            if p > 0.8:
-                d.text((x + tw_ / 2, y + th_ + 30), lab, font=font("mono", 22, 600), fill=UI_DIM, anchor="mm")
-        d.text((W // 2, 1840), ctx.cfg["handle"], font=font("sans", 34, 600), fill=CLAY, anchor="mm")
+            if im is None:
+                tile = Image.new("RGBA", (int(tw_), int(th_)), (0, 0, 0, 0))
+                td = ImageDraw.Draw(tile)
+                td.rounded_rectangle((0, 0, tile.width - 1, tile.height - 1), 16, fill=SURFACE, outline=PINK, width=3)
+                td.text((tile.width / 2, tile.height / 2 - 40), "+", font=font("inter", 70, 500), fill=PINK, anchor="mm")
+                td.multiline_text((tile.width / 2, tile.height / 2 + 30), "инструкция\nпо установке", font=font("inter", 19, 600), fill=INK, anchor="mm", align="center")
+            else:
+                tile = rounded(im.resize((int(tw_), int(th_)), Image.LANCZOS), 16)
+            put(img, tile, (cx, cy), p)
+        d.text((W // 2, 1860), ctx.cfg["handle"], font=font("inter", 34, 700), fill=PINK_FILL, anchor="mm")
         return img
 
     def frame_at(t):

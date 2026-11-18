@@ -14,7 +14,11 @@ from effects import ORDER
 TL0 = {"glass-widgets": 1.6, "documentary": 1.4, "orbit": 1.4, "chart-split": 1.4, "spotlight": 1.6, "checklist": 1.4,
        "timeline": 1.2, "text-behind": 1.0, "over-the-shoulder": 1.0, "tier-list": 1.1, "freeze-frame": 0.3, "glass-graph": 1.0,
        "color-grade": 0.5, "exploded-layers": 0.8, "ui-world": 0.9, "digital-zoom": 0.35, "lock-screen": 1.0}
-CARD = (245, 800, 835, 1850)       # x0,y0,x1,y1  (590×1050)
+CARD = (245, 800, 835, 1850)
+# start points when each effect gets ~2.4 s on screen (its intro animation plays in full)
+TL0L = {"glass-widgets": 0.6, "documentary": 0.4, "orbit": 0.3, "chart-split": 0.4, "spotlight": 0.6, "checklist": 0.3,
+        "timeline": 0.2, "text-behind": 0.0, "over-the-shoulder": 0.0, "tier-list": 0.0, "freeze-frame": -0.7,
+        "glass-graph": 0.0, "color-grade": -0.2, "ui-world": 0.2, "lock-screen": 0.0}       # x0,y0,x1,y1  (590×1050)
 
 
 def schedule(beat, off, n):
@@ -30,15 +34,25 @@ def main():
     ap.add_argument("--beat", type=float, default=0.7895); ap.add_argument("--offset", type=float, default=0.655)
     ap.add_argument("--word", default="ЭФФЕКТЫ")
     ap.add_argument("--frames", default="frames_list")
+    ap.add_argument("--part", type=int, default=-1, help="0..3: show only that quarter, 3 beats per effect")
+    ap.add_argument("--parts", type=int, default=4)
+    ap.add_argument("--avatar", help="photo for the round avatar (face crop box x0,y0,x1,y1 after ':')")
     a = ap.parse_args()
     names = ORDER
     n = len(names)
-    cuts = schedule(a.beat, a.offset, n)
+    if a.part >= 0:
+        P = math.ceil(n / a.parts); base = a.part * P; P = min(P, n - base)
+        cuts = [0.0] + [a.offset + 3 * a.beat * j for j in range(1, P + 1)]
+    else:
+        P, base = n, 0
+        cuts = schedule(a.beat, a.offset, n)
     cw, ch = CARD[2] - CARD[0], CARD[3] - CARD[1]
     jobs = []
-    for k, nm in enumerate(names):
-        nf = int((cuts[k + 1] - cuts[k]) * FPS) + 3
-        jobs.append([f"{k:02d}", nm, TL0.get(nm, 0.55), 1.0 + (k * 0.71) % 17, nf, a.frames, [cw, ch]])
+    for j in range(P):
+        k = base + j; nm = names[k]
+        nf = int((cuts[j + 1] - cuts[j]) * FPS) + 3
+        tl0 = TL0.get(nm, 0.55) if a.part < 0 else TL0L.get(nm, 0.0)
+        jobs.append([f"{k:02d}", nm, tl0, 1.0 + (k * 0.71) % 17, nf, a.frames, [cw, ch]])
     jp = a.frames + ".json"; os.makedirs(a.frames, exist_ok=True); json.dump(jobs, open(jp, "w"))
     subprocess.check_call([sys.executable, os.path.join(ROOT, "tools", "prerender.py"), a.video, jp, "4"])
     dur = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", a.music]))
@@ -46,7 +60,11 @@ def main():
 
     # ---------- static pieces
     bg = light_bg()
-    avatar = clip.frame(3.0).crop((300, 380, 780, 860)).resize((150, 150), Image.LANCZOS)
+    if a.avatar:
+        pth, box = a.avatar.split(":")
+        avatar = Image.open(pth).convert("RGB").crop(tuple(int(v) for v in box.split(","))).resize((150, 150), Image.LANCZOS)
+    else:
+        avatar = clip.frame(3.0).crop((300, 380, 780, 860)).resize((150, 150), Image.LANCZOS)
     av = Image.new("RGBA", (170, 170), (0, 0, 0, 0)); ad = ImageDraw.Draw(av)
     ad.ellipse((0, 0, 169, 169), fill=(255, 255, 255))
     m = Image.new("L", (150, 150), 0); ImageDraw.Draw(m).ellipse((0, 0, 149, 149), fill=255)
@@ -66,7 +84,8 @@ def main():
     def topbar(d, t):
         d.ellipse((W / 2 - 150, 40, W / 2 - 134, 56), fill=PINK)
         fs = int(t * FPS) % FPS
-        d.text((W / 2 - 122, 48), f"maria.aiart · 00:00:{int(t):02d}:{fs:02d}", font=font("mono", 22), fill=MUTED, anchor="lm")
+        part = f" · часть {a.part + 1}/{a.parts}" if a.part >= 0 else ""
+        d.text((W / 2 - 122, 48), f"maria.aiart · 00:00:{int(t):02d}:{fs:02d}{part}", font=font("mono", 22), fill=MUTED, anchor="lm")
 
     ROWS = math.ceil(n / 2)
     LY, LH = 290, 34
@@ -88,7 +107,7 @@ def main():
 
     def card_frame(k, t):
         d_ = os.path.join(a.frames, f"{k:02d}")
-        i = int(clamp((t - cuts[k]) * FPS, 0, len(os.listdir(d_)) - 1))
+        i = int(clamp((t - cuts[k - base]) * FPS, 0, len(os.listdir(d_)) - 1))
         return Image.open(f"{d_}/{i:03d}.jpg").convert("RGB")
 
     # ---------- CTA pieces
@@ -144,8 +163,8 @@ def main():
 
     def cta(t):
         img = bg.copy(); d = ImageDraw.Draw(img)
-        topbar(d, cuts[n] + t); title(d)
-        seg = (dur - cuts[n] - 0.3) / len(LINES)
+        topbar(d, cuts[P] + t); title(d)
+        seg = (dur - cuts[P] - 0.3) / len(LINES)
         li = min(len(LINES) - 1, int(t / seg))
         lq = ease_out(prog(t - li * seg, 0, 0.18))
         line = LINES[li]
@@ -173,13 +192,13 @@ def main():
         return img
 
     def frame(t):
-        if t >= cuts[n]:
-            return cta(t - cuts[n])
-        k = max(i for i in range(n) if cuts[i] <= t)
+        if t >= cuts[P]:
+            return cta(t - cuts[P])
+        j = max(i for i in range(P) if cuts[i] <= t); k = base + j
         img = bg.copy(); d = ImageDraw.Draw(img)
         topbar(d, t); title(d); listing(d, k)
         x0, y0, x1, y1 = CARD
-        p = ease_out(prog(t - cuts[k], 0, 0.12))
+        p = ease_out(prog(t - cuts[j], 0, 0.12))
         shadow(img, CARD, r=40, alpha=55)
         fr = card_frame(k, t)
         img.paste(fr, (x0, y0), rrect_mask(fr.size, 40))

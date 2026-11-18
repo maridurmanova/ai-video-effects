@@ -33,7 +33,7 @@ class Ctx:
         ax, ay = anchor or self.anchor
         f = self.clip.frame(ts)
         m = self.masks.at(ts, (W, H)) if (with_mask and self.masks) else None
-        if zoom != 1.0:
+        if zoom > 1.0005:
             cw, ch = W / zoom, H / zoom
             x0, y0 = ax - ax / zoom, ay - ay / zoom
             box = (x0, y0, x0 + cw, y0 + ch)

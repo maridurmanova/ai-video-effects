@@ -1,6 +1,6 @@
 ---
 name: effects
-description: 28 talking-head reel effects in one skill — /effects <name> applies one effect (text-behind, exploded-layers, lock-screen, cinematic-mode, type-ring, glass-widgets and more) to the user's vertical clip; /effects list shows all of them. Use when the user drops a video and types /effects.
+description: 28 talking-head reel effects in one skill. The command /effects plus an effect name (for example /effects text-behind, /effects lock-screen, /effects cinematic-mode) applies that effect to the user's vertical clip; /effects list shows all of them. Use when the user attaches a video and types /effects.
 ---
 
 # /effects — one command, one edit
